@@ -64,18 +64,20 @@ then
 else
     NAME="$VAR1"
     # Display Caller ID information
-    notification="$DATE $TIME, $NMBR ($NAME), $TYPE"
+    notification="Incoming call: $NMBR ($NAME), $DATE $TIME"
 fi
 
-xmpp_options="$([ $xmpp_tls = 1 ] && echo '-t') $([ ! -z $xmpp_user ] && echo '-u' $xmpp_user) \
-$([ ! -z $xmpp_pass ] && echo '-p' $xmpp_pass)"
+xmpp_options="$([ $xmpp_tls = 1 ] && echo -t) $([ ! -z $xmpp_user ] && echo -u  $xmpp_user) \
+$([ ! -z $xmpp_pass ] && echo -p $xmpp_pass)"
 
 #[ ! -z $xmpp_user ] && su $xmpp_user
-echo "Incoming call: $notification" | sendxmpp "$xmpp_options" "$xmpp_jids"
+for jid in $xmpp_jids; do
+	echo "$notification" | sendxmpp $xmpp_options $jid
+done
 #[ ! -z $xmpp_user ] && su exit
 
 #echo $notification >> .ncid-xmpp.txt
-#echo $xmpp_options >> .ncid-xmpp.txt
+echo $xmpp_options 
 #echo $xmpp_jids >> .ncid-xmpp.txt
 
 exit 0
