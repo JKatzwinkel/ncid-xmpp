@@ -16,13 +16,31 @@
 # the message is in place of NAME:
 # input: DATE\nTIME\nNUMBER\nMESG\nLINE\nTYPE\nNAME\n
 
+
+# look up name of caller
+lookupname () {
+	if [ -f "$phonebook" ]; then
+		entry=$(grep "$1" $phonebook)
+		if [ ! -z "$entry" ]; then
+			res=$(echo $entry | cut -d' ' -f2-)
+			echo -n $res
+			return 0
+		else
+			echo "$1 $2" >> $phonebook
+		fi
+	else
+		echo "$1 $2" >> $phonebook
+	fi
+	echo -n $2
+}
+
 ConfigDir=/etc/ncid/conf.d
 ConfigFile=$ConfigDir/ncid-xmpp.conf
 
 # default (see ncid-xmpp.conf for description):
 event_types="CID"
 # default xmpp JID's to send messages to [seperated by spaces]
-xmpp_jids=""
+xmpp_jids=''
 
 # default sendxmpp TLS flag
 xmpp_tls=1
@@ -30,6 +48,8 @@ xmpp_tls=1
 #xmpp_user=
 # default sendxmpp password
 #xmpp_pass=
+
+phonebook=~/.ncid-numbers.txt
 
 
 [ -f $ConfigFile ] && . $ConfigFile
@@ -42,27 +62,26 @@ read LINE
 read TYPE
 read VAR2
 
+echo -e "$DATE\n$TIME\n$NMBR\n$VAR1\n$LINE\n$TYPE\n$VAR2" > smp.txt
+
 # Look for $TYPE
-for i in $event_types
-do
+for i in $event_types; do
     [ $i = "$TYPE" ] && { found=1; break; }
 done
 
-#echo $TYPE
-#echo $xmpp_jids
 
 # Exit if $TYPE not found
 [ -z "$found" ] && exit 0
 
 if [ "$TYPE" = "MSG" -o "$TYPE" = "NOT" ]
 then
-    NAME="$VAR2"
+    NAME=$(lookupname $NMBR "$VAR2")
     MESG="$VAR1"
     # Display Message or Notice
     notification="$DATE $TIME, $NMBR ($NAME), $TYPE" 
     notification="$notification\n$MESG"
 else
-    NAME="$VAR1"
+    NAME=$(lookupname $NMBR "$VAR1")
     # Display Caller ID information
     notification="Incoming call: $NMBR ($NAME), $DATE $TIME"
 fi
@@ -76,8 +95,6 @@ for jid in $xmpp_jids; do
 done
 #[ ! -z $xmpp_user ] && su exit
 
-#echo $notification >> .ncid-xmpp.txt
-echo $xmpp_options 
-#echo $xmpp_jids >> .ncid-xmpp.txt
+
 
 exit 0
