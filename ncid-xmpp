@@ -50,6 +50,7 @@ xmpp_tls=1
 #xmpp_pass=
 
 phonebook=~/.ncid-numbers.txt
+logfile=~/.ncid-calls.txt
 
 
 [ -f $ConfigFile ] && . $ConfigFile
@@ -88,6 +89,9 @@ fi
 
 xmpp_options="$([ $xmpp_tls = 1 ] && echo -t) $([ ! -z $xmpp_user ] && echo -u  $xmpp_user) \
 $([ ! -z $xmpp_pass ] && echo -p $xmpp_pass)"
+
+# log call
+echo "$notification" >> $logfile
 
 #[ ! -z $xmpp_user ] && su $xmpp_user
 for jid in $xmpp_jids; do
