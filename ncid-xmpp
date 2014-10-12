@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # ncid-xmpp
 # usage: ncid --no-gui --program ncid-xmpp
@@ -74,17 +74,27 @@ done
 # Exit if $TYPE not found
 [ -z "$found" ] && exit 0
 
+
+# resolve ortsnetzkennzahl from AVON ortsnetzkennzahlenverzeichnis
+for i in 3 4 5 6; do
+	m=$(grep "^${NMBR:0:$i}\s\s*\S.*" avon.txt)
+	if [ -z "$DIST" ] && [ ! -z "$m" ]; then
+		DIST=$(echo "$m" | cut -f2-)
+		break
+	fi
+done
+
 if [ "$TYPE" = "MSG" -o "$TYPE" = "NOT" ]
 then
     NAME=$(lookupname $NMBR "$VAR2")
     MESG="$VAR1"
     # Display Message or Notice
-    notification="$DATE $TIME, $NMBR ($NAME), $TYPE" 
+    notification="$DATE $TIME, $NMBR ($NAME$([ ! -z "$DIST" ] && echo , $DIST)), $TYPE" 
     notification="$notification\n$MESG"
 else
     NAME=$(lookupname $NMBR "$VAR1")
     # Display Caller ID information
-    notification="Incoming call: $NMBR ($NAME), $DATE $TIME"
+    notification="Incoming call: $NAME ($NMBR$([ ! -z "$DIST" ] && echo , $DIST)), $DATE $TIME"
 fi
 
 xmpp_options="$([ $xmpp_tls = 1 ] && echo -t) $([ ! -z $xmpp_user ] && echo -u  $xmpp_user) \
